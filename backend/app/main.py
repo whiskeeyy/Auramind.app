@@ -23,3 +23,6 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
+
+from app.routers import mood
+app.include_router(mood.router)

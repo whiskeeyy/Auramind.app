@@ -1,7 +1,20 @@
 from fastapi.testclient import TestClient
 from app.main import app
+from app.core import get_supabase
+from unittest.mock import MagicMock
+import pytest
 
 client = TestClient(app)
+
+# Mock Supabase
+mock_supabase = MagicMock()
+mock_table = MagicMock()
+mock_supabase.table.return_value = mock_table
+
+def override_get_supabase():
+    return mock_supabase
+
+app.dependency_overrides[get_supabase] = override_get_supabase
 
 def test_read_main():
     response = client.get("/")
@@ -12,3 +25,48 @@ def test_health_check():
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+def test_create_mood_log():
+    # Setup mock return
+    mock_data = [{
+        "id": "123e4567-e89b-12d3-a456-426614174000",
+        "user_id": "00000000-0000-0000-0000-000000000000",
+        "mood_score": 7,
+        "stress_level": 3,
+        "energy_level": 5,
+        "note": "Feeling good",
+        "activities": ["coding"],
+        "voice_transcript": None,
+        "ai_feedback": None,
+        "created_at": "2026-01-26T12:00:00Z"
+    }]
+    mock_table.insert.return_value.execute.return_value.data = mock_data
+    
+    payload = {
+        "mood_score": 7,
+        "stress_level": 3,
+        "energy_level": 5,
+        "note": "Feeling good",
+        "activities": ["coding"]
+    }
+    response = client.post("/mood-logs/", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["mood_score"] == 7
+    assert data["id"] == "123e4567-e89b-12d3-a456-426614174000"
+
+def test_get_mood_logs():
+    mock_data = [{
+        "id": "123e4567-e89b-12d3-a456-426614174000",
+        "user_id": "00000000-0000-0000-0000-000000000000",
+        "mood_score": 8,
+        "stress_level": 2,
+        "energy_level": 8,
+        "created_at": "2026-01-26T12:00:00Z"
+    }]
+    mock_table.select.return_value.eq.return_value.execute.return_value.data = mock_data
+    
+    response = client.get("/mood-logs/")
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert response.json()[0]["mood_score"] == 8

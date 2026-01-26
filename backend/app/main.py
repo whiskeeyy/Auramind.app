@@ -24,5 +24,6 @@ async def root():
 async def health_check():
     return {"status": "ok"}
 
-from app.routers import mood
+from app.routers import mood, chat
 app.include_router(mood.router)
+app.include_router(chat.router)

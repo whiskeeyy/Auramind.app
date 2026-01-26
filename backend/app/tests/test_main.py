@@ -29,8 +29,8 @@ def test_health_check():
 def test_create_mood_log():
     # Setup mock return
     mock_data = [{
-        "id": "123e4567-e89b-12d3-a456-426614174000",
-        "user_id": "00000000-0000-0000-0000-000000000000",
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "user_id": "550e8400-e29b-41d4-a716-446655440001",
         "mood_score": 7,
         "stress_level": 3,
         "energy_level": 5,
@@ -53,12 +53,12 @@ def test_create_mood_log():
     assert response.status_code == 200
     data = response.json()
     assert data["mood_score"] == 7
-    assert data["id"] == "123e4567-e89b-12d3-a456-426614174000"
+    assert data["id"] == "550e8400-e29b-41d4-a716-446655440000"
 
 def test_get_mood_logs():
     mock_data = [{
-        "id": "123e4567-e89b-12d3-a456-426614174000",
-        "user_id": "00000000-0000-0000-0000-000000000000",
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "user_id": "550e8400-e29b-41d4-a716-446655440001",
         "mood_score": 8,
         "stress_level": 2,
         "energy_level": 8,

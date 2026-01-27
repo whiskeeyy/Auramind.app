@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
+import '../services/auth_service.dart';
 
 class MoodCheckinScreen extends StatefulWidget {
   const MoodCheckinScreen({super.key});
@@ -13,6 +15,8 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
   double _energyLevel = 5.0;
   final TextEditingController _noteController = TextEditingController();
   final List<String> _selectedActivities = [];
+  final AuthService _authService = AuthService();
+  bool _isSubmitting = false;
 
   final List<String> _activityOptions = [
     'Work',
@@ -28,7 +32,7 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Daily Check-in'),
@@ -48,7 +52,7 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
               onChanged: (value) => setState(() => _moodScore = value),
             ),
             const SizedBox(height: 24),
-            
+
             // Stress Level
             _buildSlider(
               label: 'Stress Level',
@@ -58,7 +62,7 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
               onChanged: (value) => setState(() => _stressLevel = value),
             ),
             const SizedBox(height: 24),
-            
+
             // Energy Level
             _buildSlider(
               label: 'Energy Level',
@@ -68,7 +72,7 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
               onChanged: (value) => setState(() => _energyLevel = value),
             ),
             const SizedBox(height: 32),
-            
+
             // Activities
             Text(
               'What did you do today?',
@@ -98,7 +102,7 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
               }).toList(),
             ),
             const SizedBox(height: 32),
-            
+
             // Note
             TextField(
               controller: _noteController,
@@ -110,14 +114,23 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            
+
             // Submit Button
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
-                onPressed: _submitCheckin,
-                icon: const Icon(Icons.check),
-                label: const Text('Save Check-in'),
+                onPressed: _isSubmitting ? null : _submitCheckin,
+                icon: _isSubmitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.check),
+                label: Text(_isSubmitting ? 'Saving...' : 'Save Check-in'),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
@@ -149,8 +162,8 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
             Text(
               label,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const Spacer(),
             Container(
@@ -197,11 +210,63 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
     return Colors.green;
   }
 
-  void _submitCheckin() {
-    // TODO: Implement API call to backend
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Check-in saved! (API integration pending)')),
-    );
+  Future<void> _submitCheckin() async {
+    setState(() => _isSubmitting = true);
+
+    try {
+      // Get auth token
+      final token = await _authService.getAccessToken();
+
+      if (token == null) {
+        throw Exception('Not authenticated. Please login again.');
+      }
+
+      // Create API service with auth token
+      final apiService = ApiService(authToken: token);
+
+      // Submit mood log
+      await apiService.createMoodLog(
+        moodScore: _moodScore.toInt(),
+        stressLevel: _stressLevel.toInt(),
+        energyLevel: _energyLevel.toInt(),
+        note: _noteController.text.trim().isEmpty
+            ? null
+            : _noteController.text.trim(),
+        activities: _selectedActivities,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Check-in saved successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Reset form
+        setState(() {
+          _moodScore = 5.0;
+          _stressLevel = 5.0;
+          _energyLevel = 5.0;
+          _noteController.clear();
+          _selectedActivities.clear();
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                '❌ Failed to save: ${e.toString().replaceAll('Exception: ', '')}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 
   @override

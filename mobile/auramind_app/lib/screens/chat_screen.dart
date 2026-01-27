@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import '../services/api_service.dart';
+import '../services/auth_service.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -11,54 +11,108 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
+  final AuthService _authService = AuthService();
+  ApiService? _apiService;
+
+  bool _isLoading = false;
+  String _currentAvatarState = "STATE_NEUTRAL";
 
   @override
   void initState() {
     super.initState();
+    _initApiService();
     // Welcome message
     _messages.add(ChatMessage(
-      text: "Hi! I'm here to listen. How are you feeling today?",
+      text: "Xin chào! Mình là Aura. Bạn đang cảm thấy thế nào?",
       isUser: false,
       timestamp: DateTime.now(),
     ));
+  }
+
+  Future<void> _initApiService() async {
+    final token = await _authService.getAccessToken();
+    setState(() {
+      _apiService = ApiService(authToken: token);
+    });
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Companion'),
+        title: Column(
+          children: [
+            const Text('Aura Companion'),
+            Text(
+              _getAvatarStatusText(),
+              style:
+                  const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+            ),
+          ],
+        ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.mic),
-            onPressed: () {
-              // TODO: Implement voice input
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Voice input coming soon!')),
-              );
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [
           Expanded(
-            child: _messages.isEmpty
-                ? const Center(child: Text('Start a conversation...'))
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      return _buildMessageBubble(_messages[index]);
-                    },
-                  ),
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(16),
+              itemCount: _messages.length + (_isLoading ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index == _messages.length) {
+                  return const Padding(
+                    padding:
+                        EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "Aura is typing...",
+                        style: TextStyle(
+                            fontStyle: FontStyle.italic, color: Colors.grey),
+                      ),
+                    ),
+                  );
+                }
+                return _buildMessageBubble(_messages[index]);
+              },
+            ),
           ),
           _buildInputArea(),
         ],
       ),
     );
+  }
+
+  String _getAvatarStatusText() {
+    switch (_currentAvatarState) {
+      case 'STATE_JOYFUL':
+        return '😊 Vui vẻ';
+      case 'STATE_SAD':
+        return '😔 Đồng cảm';
+      case 'STATE_ANXIOUS':
+        return '😟 Lo lắng';
+      case 'STATE_EXHAUSTED':
+        return '😫 Mệt mỏi';
+      case 'STATE_OVERWHELMED':
+        return '😵 Quá tải';
+      default:
+        return '😐 Bình thường';
+    }
   }
 
   Widget _buildMessageBubble(ChatMessage message) {
@@ -75,7 +129,10 @@ class _ChatScreenState extends State<ChatScreen> {
           color: isUser
               ? Theme.of(context).colorScheme.primaryContainer
               : Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16).copyWith(
+            bottomRight: isUser ? Radius.zero : const Radius.circular(16),
+            bottomLeft: isUser ? const Radius.circular(16) : Radius.zero,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,15 +150,10 @@ class _ChatScreenState extends State<ChatScreen> {
               _formatTime(message.timestamp),
               style: TextStyle(
                 fontSize: 10,
-                color: isUser
-                    ? Theme.of(context)
-                        .colorScheme
-                        .onPrimaryContainer
-                        .withOpacity(0.6)
-                    : Theme.of(context)
-                        .colorScheme
-                        .onSurfaceVariant
-                        .withOpacity(0.6),
+                color: (isUser
+                        ? Theme.of(context).colorScheme.onPrimaryContainer
+                        : Theme.of(context).colorScheme.onSurfaceVariant)
+                    .withOpacity(0.6),
               ),
             ),
           ],
@@ -129,7 +181,7 @@ class _ChatScreenState extends State<ChatScreen> {
             child: TextField(
               controller: _messageController,
               decoration: InputDecoration(
-                hintText: 'Type a message...',
+                hintText: 'Nhập tin nhắn...',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),
@@ -142,13 +194,14 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          FilledButton(
+          IconButton(
             onPressed: _sendMessage,
-            style: FilledButton.styleFrom(
-              shape: const CircleBorder(),
-              padding: const EdgeInsets.all(16),
+            icon: const Icon(Icons.send),
+            style: IconButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              padding: const EdgeInsets.all(12),
             ),
-            child: const Icon(Icons.send),
           ),
         ],
       ),
@@ -157,7 +210,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty || _apiService == null) return;
 
     setState(() {
       _messages.add(ChatMessage(
@@ -166,40 +219,30 @@ class _ChatScreenState extends State<ChatScreen> {
         timestamp: DateTime.now(),
       ));
       _messageController.clear();
+      _isLoading = true;
     });
+    _scrollToBottom();
 
-    // Call Backend API
     try {
-      final response = await http.post(
-        Uri.parse(
-            'http://localhost:8000/chat/'), // Use generic localhost for web/desktop
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'message': text,
-        }),
-      );
+      final response = await _apiService!.sendChatMessage(message: text);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final aiReply = data['reply'];
-
-        if (mounted) {
-          setState(() {
-            _messages.add(ChatMessage(
-              text: aiReply,
-              isUser: false,
-              timestamp: DateTime.now(),
-            ));
-          });
-        }
-      } else {
-        debugPrint('Error: ${response.statusCode}');
+      if (mounted) {
+        setState(() {
+          _messages.add(ChatMessage(
+            text: response['reply'],
+            isUser: false,
+            timestamp: DateTime.now(),
+          ));
+          _currentAvatarState = response['avatar_state'] ?? "STATE_NEUTRAL";
+          _isLoading = false;
+        });
+        _scrollToBottom();
       }
     } catch (e) {
-      debugPrint('Network Error: $e');
       if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to connect to AI: $e')),
+          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
         );
       }
     }
@@ -212,6 +255,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _messageController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 }

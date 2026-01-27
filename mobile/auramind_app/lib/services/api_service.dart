@@ -1,9 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl =
-      'http://localhost:8000'; // Update with your backend URL
+  // Use 10.0.2.2 for Android Emulator, localhost for iOS/Web
+  static String get baseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:8000';
+    }
+    return 'http://10.0.2.2:8000';
+  }
 
   final String? _authToken;
 
@@ -84,6 +90,32 @@ class ApiService {
         return jsonDecode(response.body);
       } else {
         throw Exception('Health check failed');
+      }
+    } catch (e) {
+      throw Exception('Network error: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> sendChatMessage({
+    required String message,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/'),
+        headers: _headers,
+        body: jsonEncode({
+          'message': message,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized. Please login again.');
+      } else if (response.statusCode == 429) {
+        throw Exception('Rate limit exceeded. Please try again later.');
+      } else {
+        throw Exception('Failed to send message: ${response.statusCode}');
       }
     } catch (e) {
       throw Exception('Network error: $e');

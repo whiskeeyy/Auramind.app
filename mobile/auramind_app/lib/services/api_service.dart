@@ -2,7 +2,23 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8000'; // Update with your backend URL
+  static const String baseUrl =
+      'http://localhost:8000'; // Update with your backend URL
+
+  final String? _authToken;
+
+  /// Create an API service instance
+  /// If authToken is provided, it will be included in all requests
+  ApiService({String? authToken}) : _authToken = authToken;
+
+  /// Get headers with optional authentication
+  Map<String, String> get _headers {
+    final headers = {'Content-Type': 'application/json'};
+    if (_authToken != null) {
+      headers['Authorization'] = 'Bearer $_authToken';
+    }
+    return headers;
+  }
 
   Future<Map<String, dynamic>> createMoodLog({
     required int moodScore,
@@ -15,7 +31,7 @@ class ApiService {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/mood-logs/'),
-        headers: {'Content-Type': 'application/json'},
+        headers: _headers,
         body: jsonEncode({
           'mood_score': moodScore,
           'stress_level': stressLevel,
@@ -28,6 +44,8 @@ class ApiService {
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized. Please login again.');
       } else {
         throw Exception('Failed to create mood log: ${response.statusCode}');
       }
@@ -40,12 +58,14 @@ class ApiService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/mood-logs/'),
-        headers: {'Content-Type': 'application/json'},
+        headers: _headers,
       );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         return data.cast<Map<String, dynamic>>();
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized. Please login again.');
       } else {
         throw Exception('Failed to fetch mood logs: ${response.statusCode}');
       }

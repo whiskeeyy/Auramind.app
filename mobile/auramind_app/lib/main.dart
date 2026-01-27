@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'screens/home_screen.dart';
+import 'config/supabase_config.dart';
+import 'widgets/auth_wrapper.dart';
 
-void main() {
+void main() async {
+  // Ensure Flutter is initialized
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Supabase before running the app
+  await SupabaseConfig.initialize();
+
   runApp(const AuramindApp());
 }
 
@@ -31,7 +38,7 @@ class AuramindApp extends StatelessWidget {
         textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
       ),
       themeMode: ThemeMode.system,
-      home: const HomeScreen(),
+      home: const AuthWrapper(), // Use AuthWrapper instead of HomeScreen
     );
   }
 }

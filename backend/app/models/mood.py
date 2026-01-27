@@ -9,12 +9,15 @@ class MoodLogCreate(BaseModel):
     note: Optional[str] = None
     activities: List[str] = []
     voice_transcript: Optional[str] = None
-    # user_id will be extracted from auth token in real app
+    primary_emotion: Optional[str] = Field(None, description="Primary emotion (vui, buồn, giận, lo lắng, bình yên, mệt mỏi)")
+    summary: Optional[str] = Field(None, description="One-sentence summary of emotional state")
 
 class MoodLogResponse(MoodLogCreate):
     id: UUID4
     user_id: UUID4
     ai_feedback: Optional[str] = None
+    avatar_state: Optional[str] = Field(None, description="Avatar state (STATE_JOYFUL, STATE_NEUTRAL, STATE_SAD, STATE_EXHAUSTED, STATE_ANXIOUS)")
     created_at: datetime
     
     model_config = ConfigDict(from_attributes=True)
+

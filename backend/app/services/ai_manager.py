@@ -216,6 +216,66 @@ class AvatarOrchestratorAgent:
         else:
             return "STATE_EXHAUSTED"
 
+
+class ChatAgent:
+    """
+    Chat Agent - Handles real-time conversation with memory
+    """
+    def __init__(self):
+        self.model = genai.GenerativeModel('gemini-1.5-flash')
+
+    async def chat(self, message: str, history: list[dict]) -> dict:
+        """
+        Chat with AI using conversation history
+        
+        Args:
+            message: Current user message
+            history: List of previous messages [{"role": "user/assistant", "content": "..."}]
+            
+        Returns:
+            dict containing reply and avatar_state
+        """
+        # Format history for prompt
+        history_str = ""
+        for msg in history:
+            role = "User" if msg['role'] == 'user' else "Aura"
+            history_str += f"{role}: {msg['content']}\n"
+            
+        prompt = f"""Role: Bạn là Aura, một người bạn ảo thấu cảm.
+Context History:
+{history_str}
+Current User Message: {message}
+
+Task:
+1. Phân tích cảm xúc của người dùng từ tin nhắn hiện tại và lịch sử.
+2. Đưa ra phản hồi (Reply) bằng tiếng Việt:
+   - Ngắn gọn (1-3 câu), tự nhiên, thấu hiểu.
+   - Dùng "mình" và "bạn".
+   - Hỏi lại để duy trì hội thoại nếu cần.
+3. Xác định trạng thái Avatar (Avatar State) phù hợp nhất:
+   - STATE_NEUTRAL (Bình thường)
+   - STATE_JOYFUL (Vui vẻ, tích cực)
+   - STATE_SAD (Buồn, đồng cảm)
+   - STATE_ANXIOUS (Lo lắng, căng thẳng)
+   - STATE_EXHAUSTED (Mệt mỏi)
+   - STATE_OVERWHELMED (Quá tải)
+
+Output Format (JSON Only):
+{{
+  "reply": "Nội dung phản hồi...",
+  "avatar_state": "STATE_..."
+}}"""
+        
+        try:
+            response = self.model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
+            return json.loads(response.text)
+        except Exception as e:
+            print(f"Chat Agent Error: {e}")
+            return {
+                "reply": "Mình đang lắng nghe, bạn nói tiếp đi...",
+                "avatar_state": "STATE_NEUTRAL"
+            }
+
 class AIAgentManager:
     """
     Orchestrates the three AI agents in a pipeline with enhanced error handling
@@ -224,11 +284,17 @@ class AIAgentManager:
     - Context-aware responses
     - Robust error handling with fallbacks
     - Rate limiting support
+    - Real-time chat support
     """
     def __init__(self):
         self.analyzer = AnalyzerAgent()
         self.empathizer = EmpathyAgent()
         self.orchestrator = AvatarOrchestratorAgent()
+        self.chat_agent = ChatAgent()
+
+    async def chat(self, message: str, history: list[dict]) -> dict:
+        """Delegates to ChatAgent"""
+        return await self.chat_agent.chat(message, history)
 
     async def analyze_mood(
         self, 

@@ -4,6 +4,7 @@ pydantic
 supabase
 python-dotenv
 pytest
+pytest-asyncio
 httpx
 google-generativeai
 pyjwt[crypto]

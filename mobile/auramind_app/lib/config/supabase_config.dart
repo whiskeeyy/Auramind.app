@@ -1,3 +1,4 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Supabase client configuration and initialization
@@ -8,13 +9,16 @@ class SupabaseConfig {
   SupabaseConfig._internal();
 
   static Future<void> initialize() async {
-    // TODO: Move these to environment variables for production
-    // For now, using constants (NEVER commit real keys to git!)
-    const supabaseUrl = 'https://rofkecleciqfyvqtdrgh.supabase.co';
-    const supabaseAnonKey = String.fromEnvironment(
-      'SUPABASE_ANON_KEY',
-      defaultValue: 'YOUR_SUPABASE_ANON_KEY_HERE', // Replace with actual key
-    );
+    // Load keys from .env (local) or build environment (CI/CD)
+    final supabaseUrl = dotenv.env['SUPABASE_URL'] ??
+        const String.fromEnvironment('SUPABASE_URL');
+    final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'] ??
+        const String.fromEnvironment('SUPABASE_ANON_KEY');
+
+    if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+      throw Exception(
+          'Supabase keys not found. Please create a .env file or pass them as build arguments.');
+    }
 
     await Supabase.initialize(
       url: supabaseUrl,

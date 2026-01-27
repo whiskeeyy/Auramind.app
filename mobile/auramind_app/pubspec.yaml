@@ -16,6 +16,7 @@ dependencies:
   intl: ^0.18.0
   fl_chart: ^0.65.0
   google_fonts: ^6.1.0
+  flutter_dotenv: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -26,5 +27,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  # assets:
-  #   - images/
+  assets:
+    - .env
+    # - images/

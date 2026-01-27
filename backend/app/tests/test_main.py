@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 from app.main import app
 from app.core import get_supabase
+from app.auth import get_current_user
 from unittest.mock import MagicMock
 import pytest
 
@@ -14,7 +15,14 @@ mock_supabase.table.return_value = mock_table
 def override_get_supabase():
     return mock_supabase
 
+# Mock authentication - return a test user ID
+MOCK_USER_ID = "550e8400-e29b-41d4-a716-446655440001"
+
+async def override_get_current_user():
+    return MOCK_USER_ID
+
 app.dependency_overrides[get_supabase] = override_get_supabase
+app.dependency_overrides[get_current_user] = override_get_current_user
 
 def test_read_main():
     response = client.get("/")
@@ -30,7 +38,7 @@ def test_create_mood_log():
     # Setup mock return
     mock_data = [{
         "id": "550e8400-e29b-41d4-a716-446655440000",
-        "user_id": "550e8400-e29b-41d4-a716-446655440001",
+        "user_id": MOCK_USER_ID,  # Use mocked user ID
         "mood_score": 7,
         "stress_level": 3,
         "energy_level": 5,

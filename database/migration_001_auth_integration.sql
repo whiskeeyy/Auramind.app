@@ -23,7 +23,8 @@ DROP TABLE IF EXISTS users CASCADE;
 CREATE TABLE profiles (
   id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   display_name text,
-  avatar_config jsonb DEFAULT '{}'::jsonb, -- Stores skin, hair, style, model_url
+  avatar_config jsonb DEFAULT '{}'::jsonb 
+    CHECK (jsonb_typeof(avatar_config) = 'object'), -- Ensures avatar_config is always a JSON object
   daily_reminder time,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
@@ -31,7 +32,7 @@ CREATE TABLE profiles (
 
 -- Add comment for documentation
 COMMENT ON TABLE profiles IS 'User profiles linked to Supabase Auth users';
-COMMENT ON COLUMN profiles.avatar_config IS 'JSON configuration for personalized avatar (skin tone, hair style, accessories, etc.)';
+COMMENT ON COLUMN profiles.avatar_config IS 'JSON configuration for personalized avatar (skin tone, hair style, accessories, etc.). Must be a valid JSON object.';
 
 -- ============================================================================
 -- STEP 3: Create mood_logs table

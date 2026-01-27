@@ -19,19 +19,19 @@ class DashboardScreen extends StatelessWidget {
             // Weekly Overview Card
             _buildOverviewCard(context),
             const SizedBox(height: 24),
-            
+
             // Mood Trend Chart
             _buildSectionTitle(context, 'Mood Trend (7 Days)'),
             const SizedBox(height: 12),
             _buildMoodChart(context),
             const SizedBox(height: 24),
-            
+
             // Emotion Distribution
             _buildSectionTitle(context, 'Emotion Distribution'),
             const SizedBox(height: 12),
             _buildEmotionPieChart(context),
             const SizedBox(height: 24),
-            
+
             // Recent Activities
             _buildSectionTitle(context, 'Recent Activities'),
             const SizedBox(height: 12),
@@ -46,8 +46,8 @@ class DashboardScreen extends StatelessWidget {
     return Text(
       title,
       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-        fontWeight: FontWeight.bold,
-      ),
+            fontWeight: FontWeight.bold,
+          ),
     );
   }
 
@@ -60,9 +60,12 @@ class DashboardScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatItem(context, '7.2', 'Avg Mood', Icons.mood, Colors.green),
-                _buildStatItem(context, '4.5', 'Avg Stress', Icons.warning_amber, Colors.orange),
-                _buildStatItem(context, '6.8', 'Avg Energy', Icons.bolt, Colors.amber),
+                _buildStatItem(
+                    context, '7.2', 'Avg Mood', Icons.mood, Colors.green),
+                _buildStatItem(context, '4.5', 'Avg Stress',
+                    Icons.warning_amber, Colors.orange),
+                _buildStatItem(
+                    context, '6.8', 'Avg Energy', Icons.bolt, Colors.amber),
               ],
             ),
           ],
@@ -71,7 +74,8 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatItem(BuildContext context, String value, String label, IconData icon, Color color) {
+  Widget _buildStatItem(BuildContext context, String value, String label,
+      IconData icon, Color color) {
     return Column(
       children: [
         Icon(icon, color: color, size: 32),
@@ -79,9 +83,9 @@ class DashboardScreen extends StatelessWidget {
         Text(
           value,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
         ),
         Text(
           label,
@@ -99,7 +103,7 @@ class DashboardScreen extends StatelessWidget {
           height: 200,
           child: LineChart(
             LineChartData(
-              gridData: FlGridData(show: true),
+              gridData: const FlGridData(show: true),
               titlesData: FlTitlesData(
                 leftTitles: AxisTitles(
                   sideTitles: SideTitles(
@@ -114,7 +118,15 @@ class DashboardScreen extends StatelessWidget {
                   sideTitles: SideTitles(
                     showTitles: true,
                     getTitlesWidget: (value, meta) {
-                      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                      const days = [
+                        'Mon',
+                        'Tue',
+                        'Wed',
+                        'Thu',
+                        'Fri',
+                        'Sat',
+                        'Sun'
+                      ];
                       if (value.toInt() >= 0 && value.toInt() < days.length) {
                         return Text(days[value.toInt()]);
                       }
@@ -122,8 +134,10 @@ class DashboardScreen extends StatelessWidget {
                     },
                   ),
                 ),
-                rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               ),
               borderData: FlBorderData(show: false),
               minY: 0,
@@ -142,10 +156,11 @@ class DashboardScreen extends StatelessWidget {
                   isCurved: true,
                   color: Theme.of(context).colorScheme.primary,
                   barWidth: 3,
-                  dotData: FlDotData(show: true),
+                  dotData: const FlDotData(show: true),
                   belowBarData: BarAreaData(
                     show: true,
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
                   ),
                 ),
               ],

@@ -74,7 +74,7 @@ class _ChatScreenState extends State<ChatScreen> {
         decoration: BoxDecoration(
           color: isUser
               ? Theme.of(context).colorScheme.primaryContainer
-              : Theme.of(context).colorScheme.surfaceVariant,
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -94,8 +94,14 @@ class _ChatScreenState extends State<ChatScreen> {
               style: TextStyle(
                 fontSize: 10,
                 color: isUser
-                    ? Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.6)
-                    : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                    ? Theme.of(context)
+                        .colorScheme
+                        .onPrimaryContainer
+                        .withOpacity(0.6)
+                    : Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant
+                        .withOpacity(0.6),
               ),
             ),
           ],
@@ -149,7 +155,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  void _sendMessage() {
+  Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
@@ -165,7 +171,8 @@ class _ChatScreenState extends State<ChatScreen> {
     // Call Backend API
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:8000/chat/'), // Use generic localhost for web/desktop
+        Uri.parse(
+            'http://localhost:8000/chat/'), // Use generic localhost for web/desktop
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'message': text,
@@ -192,7 +199,7 @@ class _ChatScreenState extends State<ChatScreen> {
       debugPrint('Network Error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text('Failed to connect to AI: $e')),
+          SnackBar(content: Text('Failed to connect to AI: $e')),
         );
       }
     }

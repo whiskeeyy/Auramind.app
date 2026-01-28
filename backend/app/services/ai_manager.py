@@ -276,6 +276,60 @@ Output Format (JSON Only):
                 "avatar_state": "STATE_NEUTRAL"
             }
 
+
+class InsightAgent:
+    """
+    Insight Agent - Analyzes monthly mood data to identify patterns and trends
+    
+    Uses gemini-1.5-flash for cost optimization and fast responses.
+    """
+    def __init__(self):
+        self.model = genai.GenerativeModel('gemini-1.5-flash')
+
+    async def analyze_month(self, days_data: list) -> str:
+        """
+        Generate monthly insight from aggregated mood data
+        
+        Args:
+            days_data: List of day summaries with avg_mood, activities, avatar_state
+            
+        Returns:
+            Vietnamese insight string about emotional patterns
+        """
+        if not days_data:
+            return "Chưa có đủ dữ liệu để phân tích xu hướng tháng này."
+        
+        # Format data for prompt
+        data_summary = ""
+        for day in days_data:
+            data_summary += f"- {day['date']}: mood={day['avg_mood']:.1f}, state={day['avatar_state']}, activities={day['activities']}\n"
+        
+        prompt = f"""Role: Bạn là Insight Analyst của AuraMind, chuyên phân tích xu hướng cảm xúc.
+Task: Dựa vào dữ liệu cảm xúc hàng ngày dưới đây, hãy đưa ra MỘT câu nhận xét ngắn gọn về xu hướng nổi bật nhất.
+
+Data:
+{data_summary}
+
+Constraints:
+- Chỉ trả về 1 câu duy nhất, tối đa 30 từ
+- Viết bằng tiếng Việt tự nhiên, thân thiện
+- Tập trung vào mối liên hệ giữa hoạt động và tâm trạng nếu có
+- Nếu không có pattern rõ ràng, đưa ra nhận xét tích cực về việc ghi nhật ký
+
+Ví dụ output:
+- "Tháng này bạn vui vẻ hơn vào những ngày tập gym!"
+- "Mình thấy bạn thường cảm thấy mệt mỏi vào cuối tuần."
+- "Bạn đã ghi nhật ký đều đặn - điều đó thật tuyệt vời!"
+"""
+        
+        try:
+            response = self.model.generate_content(prompt)
+            return response.text.strip()
+        except Exception as e:
+            print(f"Insight Agent Error: {e}")
+            return "Bạn đang làm rất tốt với việc theo dõi cảm xúc hàng ngày! 💪"
+
+
 class AIAgentManager:
     """
     Orchestrates the three AI agents in a pipeline with enhanced error handling
@@ -291,6 +345,11 @@ class AIAgentManager:
         self.empathizer = EmpathyAgent()
         self.orchestrator = AvatarOrchestratorAgent()
         self.chat_agent = ChatAgent()
+        self.insight_agent = InsightAgent()
+
+    async def get_monthly_insight(self, days_data: list) -> str:
+        """Delegates to InsightAgent for monthly pattern analysis"""
+        return await self.insight_agent.analyze_month(days_data)
 
     async def chat(self, message: str, history: list[dict]) -> dict:
         """Delegates to ChatAgent"""

@@ -5,20 +5,21 @@ Auramind is a "Digital Companion" that helps users transform invisible emotions 
 ## 🌟 Core Values
 - **Empathy-first**: AI that doesn't just answer—it understands.
 - **Visual Identity**: Personal avatars that mirror your emotional state.
+- **Data-Driven Insights**: Calendar views and analytics to track mental health trends.
 
 ## 🛠 Tech Stack (2026 Edition)
-- **Mobile App**: **Flutter** for high-performance cross-platform experience.
-- **AI Orchestration**: **Antigravity Manager** (powered by Gemini) for empathetic analysis.
+- **Mobile App**: **Flutter** (Provider State Management) for high-performance cross-platform experience.
+- **AI Orchestration**: **Antigravity Manager** (powered by Gemini) with specialized agents (Empathy, Insight, Analyzer).
 - **Backend**: **FastAPI** for high-speed Python-based AI services.
-- **Data & Auth**: **Supabase** (PostgreSQL) for realtime sync and secure authentication.
+- **Data & Auth**: **Supabase** (PostgreSQL) for realtime sync, secure RLS, and authentication.
 - **Face Tracking**: **MediaPipe** for AI-driven avatar mapping.
 
 ## 📁 Repository Structure
 ```text
 root/
-├── backend/          # FastAPI application & AI Agents
+├── backend/          # FastAPI application & AI Agents (Empathy, Insight, Analyzer)
 ├── mobile/           # Flutter mobile client (MVP)
-├── database/         # SQL schema & database migrations
+├── database/         # SQL schema & database migrations (See MIGRATION_README.md)
 ├── docs/             # PRD, API documentation, and research
 ├── shared/           # Shared models and type definitions
 └── .github/          # GitHub Actions for CI/CD
@@ -37,12 +38,12 @@ root/
 
 ### Database Setup
 1. Setup a project on [Supabase](https://supabase.com/).
-2. Run the SQL script found in `database/schema.sql` via the Supabase SQL Editor.
+2. Follow instructions in `database/MIGRATION_README.md` to run migrations in order.
 
 ## 🛡 Safety & Privacy
 - **AI Safety**: Configured to provide empathetic listening without replacing professional medical advice.
 - **Emergency Support**: Automatically displays mental health hotline (1900555618) if mood scores indicate persistent distress.
-- **Data Privacy**: All journal entries are processed with privacy-first standards.
+- **Data Privacy**: All journal entries are processed with privacy-first standards using Row Level Security (RLS).
 
 ---
-*Status: MVP Development Phase (Week 0-1)*
+*Status: Active Development (Features Implementing: Aura Calendar, AI Agents)*

@@ -22,31 +22,34 @@ flutter test integration_test
 ```
 
 ## Project Structure
-
 ```
 lib/
 ├── main.dart              # App entry point
+├── config/                # Configuration (Supabase, Themes)
 ├── screens/               # UI screens
 │   ├── home_screen.dart
 │   ├── mood_checkin_screen.dart
 │   ├── chat_screen.dart
+│   ├── calendar_screen.dart # Mood heatmap & history
 │   └── dashboard_screen.dart
 ├── widgets/               # Reusable widgets
 ├── services/              # API and business logic
-│   └── api_service.dart
-└── models/                # Data models
+│   ├── api_service.dart
+│   └── ai_agent_service.dart
+├── models/                # Data models
+└── providers/             # State management (Provider)
 ```
 
 ## Features
-
-- **Mood Check-in**: Log daily mood, stress, and energy levels
-- **AI Chat**: Empathetic conversation with AI companion
-- **Dashboard**: Visual analytics and trends
-- **Material 3 Design**: Modern, beautiful UI with dark mode support
+- **Mood Check-in**: Log daily mood, stress, and energy levels with voice transcription.
+- **Aura Calendar**: 30-day heatmap visualization of emotional trends.
+- **AI Chat**: Empathetic conversation with specialized AI agents (Empathy, Insight).
+- **Dashboard**: Visual analytics and personalized insights.
+- **Material 3 Design**: Modern, beautiful UI with dark mode support.
 
 ## Dependencies
-
 - `supabase_flutter`: Database and authentication
 - `fl_chart`: Beautiful charts and graphs
 - `google_fonts`: Custom typography
-- `provider`: State management
+- `provider`: State management (v6.0+)
+

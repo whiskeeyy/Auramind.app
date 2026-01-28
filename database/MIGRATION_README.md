@@ -1,5 +1,18 @@
 # Database Migration Instructions
 
+## Migration 001: Supabase Auth Integration & Base Custom Schema
+
+This migration establishes the core database structure, integrating with Supabase Auth (`auth.users`) and creating the foundational tables.
+
+### Features
+- **Profiles Table**: Linked to `auth.users`, stores user preferences including `avatar_config`.
+- **Mood Logs Table**: Stores daily check-ins (score, stress, energy, notes).
+- **RLS Policies**: Row Level Security enabled for data privacy (users can only access their own data).
+- **Auto-Profile Creation**: Trigger to create a profile automatically when a user signs up.
+
+### How to Run
+Run the file `database/migration_001_auth_integration.sql` in the Supabase SQL Editor.
+
 ## Migration 002: AI Agent Fields
 
 This migration adds support for the three AI agents by adding new columns to the `mood_logs` table.

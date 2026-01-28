@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'mood_checkin_screen.dart';
 import 'chat_screen.dart';
 import 'dashboard_screen.dart';
+import 'calendar_screen.dart';
 import '../services/auth_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   static const List<Widget> _screens = [
     MoodCheckinScreen(),
     ChatScreen(),
+    CalendarScreen(),
     DashboardScreen(),
   ];
 
@@ -57,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _selectedIndex == 2
+      appBar: _selectedIndex == 3
           ? AppBar(
               title: const Text('Dashboard'),
               actions: [
@@ -87,6 +89,11 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.chat_bubble_outline),
             selectedIcon: Icon(Icons.chat_bubble),
             label: 'Chat',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_month_outlined),
+            selectedIcon: Icon(Icons.calendar_month),
+            label: 'Calendar',
           ),
           NavigationDestination(
             icon: Icon(Icons.dashboard_outlined),

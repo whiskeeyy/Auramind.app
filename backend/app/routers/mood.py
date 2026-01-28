@@ -1,6 +1,9 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import List
+from datetime import datetime
+from collections import Counter, defaultdict
 from app.models.mood import MoodLogCreate, MoodLogResponse
+from app.models.calendar import DaySummary, MonthlyCalendarResponse
 from app.core import get_supabase_with_auth
 from app.auth import get_current_user
 from supabase import Client
@@ -117,3 +120,129 @@ async def get_mood_logs(
         print(f"DB Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.get("/calendar/", response_model=MonthlyCalendarResponse)
+async def get_calendar_data(
+    month: int = Query(..., ge=1, le=12, description="Month (1-12)"),
+    year: int = Query(..., ge=2020, le=2050, description="Year"),
+    include_insight: bool = Query(False, description="Include AI-generated monthly insight"),
+    current_user: str = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase_with_auth)
+):
+    """
+    Get aggregated mood data for calendar view.
+    
+    Returns daily summaries with:
+    - Average mood score
+    - Primary avatar state (most common)
+    - Top activities
+    - Log count
+    
+    Optionally includes AI-generated monthly insight (uses 1 API call).
+    """
+    from app.services.ai_manager import get_ai_manager
+    from app.services.rate_limiter import get_rate_limiter
+    
+    # Build date range for the month
+    start_date = f"{year}-{month:02d}-01T00:00:00"
+    if month == 12:
+        end_date = f"{year + 1}-01-01T00:00:00"
+    else:
+        end_date = f"{year}-{month + 1:02d}-01T00:00:00"
+    
+    try:
+        # Query mood logs for the month
+        response = supabase.table("mood_logs")\
+            .select("mood_score, avatar_state, activities, created_at")\
+            .eq("user_id", current_user)\
+            .gte("created_at", start_date)\
+            .lt("created_at", end_date)\
+            .order("created_at", desc=False)\
+            .execute()
+        
+        logs = response.data or []
+        
+        if not logs:
+            return MonthlyCalendarResponse(
+                year=year,
+                month=month,
+                days=[],
+                monthly_insight=None,
+                total_logs=0
+            )
+        
+        # Aggregate by date
+        daily_data = defaultdict(lambda: {
+            "mood_scores": [],
+            "avatar_states": [],
+            "activities": []
+        })
+        
+        for log in logs:
+            # Parse date (handle timezone)
+            created_at = log["created_at"]
+            if isinstance(created_at, str):
+                date_str = created_at[:10]  # Extract YYYY-MM-DD
+            else:
+                date_str = created_at.strftime("%Y-%m-%d")
+            
+            daily_data[date_str]["mood_scores"].append(log["mood_score"])
+            if log.get("avatar_state"):
+                daily_data[date_str]["avatar_states"].append(log["avatar_state"])
+            if log.get("activities"):
+                daily_data[date_str]["activities"].extend(log["activities"])
+        
+        # Build day summaries
+        days = []
+        insight_data = []  # For AI analysis
+        
+        for date_str, data in sorted(daily_data.items()):
+            avg_mood = sum(data["mood_scores"]) / len(data["mood_scores"])
+            
+            # Most common avatar state
+            if data["avatar_states"]:
+                primary_state = Counter(data["avatar_states"]).most_common(1)[0][0]
+            else:
+                primary_state = "STATE_NEUTRAL"
+            
+            # Top 3 activities
+            if data["activities"]:
+                top_activities = [a for a, _ in Counter(data["activities"]).most_common(3)]
+            else:
+                top_activities = []
+            
+            days.append(DaySummary(
+                date=date_str,
+                average_mood_score=round(avg_mood, 1),
+                primary_avatar_state=primary_state,
+                top_activities=top_activities,
+                log_count=len(data["mood_scores"])
+            ))
+            
+            # Prepare data for insight agent
+            insight_data.append({
+                "date": date_str,
+                "avg_mood": avg_mood,
+                "avatar_state": primary_state,
+                "activities": top_activities
+            })
+        
+        # Generate monthly insight if requested (and rate limit allows)
+        monthly_insight = None
+        if include_insight and len(days) >= 3:
+            rate_limiter = get_rate_limiter()
+            if rate_limiter.is_allowed(current_user):
+                ai_manager = get_ai_manager()
+                monthly_insight = await ai_manager.get_monthly_insight(insight_data)
+        
+        return MonthlyCalendarResponse(
+            year=year,
+            month=month,
+            days=days,
+            monthly_insight=monthly_insight,
+            total_logs=len(logs)
+        )
+        
+    except Exception as e:
+        print(f"Calendar DB Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

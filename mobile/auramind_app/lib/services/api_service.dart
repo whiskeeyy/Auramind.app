@@ -121,4 +121,33 @@ class ApiService {
       throw Exception('Network error: $e');
     }
   }
+
+  /// Get calendar data for a specific month
+  Future<Map<String, dynamic>> getCalendarData({
+    required int month,
+    required int year,
+    bool includeInsight = false,
+  }) async {
+    try {
+      final uri = Uri.parse('$baseUrl/mood-logs/calendar/').replace(
+        queryParameters: {
+          'month': month.toString(),
+          'year': year.toString(),
+          'include_insight': includeInsight.toString(),
+        },
+      );
+
+      final response = await http.get(uri, headers: _headers);
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized. Please login again.');
+      } else {
+        throw Exception('Failed to fetch calendar: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Network error: $e');
+    }
+  }
 }

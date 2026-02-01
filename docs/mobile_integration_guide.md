@@ -528,6 +528,81 @@ class HomeScreen extends ConsumerWidget {
 
 ---
 
+## Holistic Calendar Integration
+
+### Calendar API
+
+The calendar endpoint now returns health metrics alongside mood data:
+
+```dart
+/// Get holistic calendar data for a month
+Future<Map<String, dynamic>> getCalendarData({
+  required int month,
+  required int year,
+  bool includeInsight = false,
+}) async {
+  final uri = Uri.parse('$baseUrl/mood-logs/calendar/').replace(
+    queryParameters: {
+      'month': month.toString(),
+      'year': year.toString(),
+      'include_insight': includeInsight.toString(),
+    },
+  );
+  
+  final response = await http.get(uri, headers: _headers);
+  return jsonDecode(response.body);
+}
+```
+
+### Response Structure
+
+```json
+{
+  "year": 2026,
+  "month": 2,
+  "days": [
+    {
+      "date": "2026-02-01",
+      "average_mood_score": 8.5,
+      "primary_avatar_state": "STATE_JOYFUL",
+      "top_activities": ["gym", "coding"],
+      "log_count": 2,
+      "health_summary": {
+        "total_steps": 8500,
+        "avg_sleep_hours": 7.2,
+        "total_meditation_min": 15,
+        "total_exercise_min": 45,
+        "avg_water_glasses": 8
+      }
+    }
+  ],
+  "monthly_insight": "Dữ liệu cho thấy giấc ngủ đủ giấc giúp mood của bạn cao hơn!",
+  "total_logs": 15
+}
+```
+
+### Health Summary Null Handling
+
+Health data is optional. Handle gracefully in UI:
+
+```dart
+final healthSummary = data['health_summary'] as Map<String, dynamic>?;
+
+if (healthSummary != null) {
+  // Display sleep hours
+  if (healthSummary['avg_sleep_hours'] != null) {
+    _buildMetricRow('Giấc ngủ', '${healthSummary['avg_sleep_hours']}h');
+  }
+  
+  // Display steps
+  if (healthSummary['total_steps'] != null) {
+    _buildMetricRow('Bước chân', '${healthSummary['total_steps']}');
+  }
+}
+```
+
+---
+
 ## Summary
 
 ### Key Integration Points

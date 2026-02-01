@@ -1,8 +1,8 @@
 # PRODUCT REQUIREMENT DOCUMENT (PRD): AURAMIND
 
-**Version**: 1.0 (2026 Edition)  
+**Version**: 1.1 (2026 Edition)  
 **Status**: MVP Development Phase  
-**Last Updated**: 2026-01-26
+**Last Updated**: 2026-02-01
 
 ---
 
@@ -62,7 +62,7 @@ Tập trung vào vòng lặp: Check-in → Phân tích (AI) → Phản hồi (Av
 
 #### Habit Integration
 - Đối chiếu Mood với dữ liệu giấc ngủ, bước chân từ Google Fit/Apple Health
-- **Status**: 🔜 Planned
+- **Status**: ✅ Implemented (Holistic Calendar)
 
 #### Voice Chat
 - Giao tiếp bằng giọng nói thời gian thực (Whisper + TTS)
@@ -107,6 +107,7 @@ CREATE TABLE mood_logs (
   activities text[],
   ai_feedback text,
   voice_transcript text,
+  health_metrics jsonb,  -- NEW: {"steps": 5000, "sleep_hours": 7.5, "meditation_min": 15}
   created_at timestamptz DEFAULT now()
 );
 ```

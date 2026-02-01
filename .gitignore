@@ -62,3 +62,6 @@ Thumbs.db
 *.log
 *.bak
 *.swp
+
+# Local Task Management
+docs/TASKS.md

@@ -19,6 +19,7 @@ class MoodLogResponse(MoodLogCreate):
     ai_feedback: Optional[str] = None
     avatar_state: Optional[str] = Field(None, description="Avatar state (STATE_JOYFUL, STATE_NEUTRAL, STATE_SAD, STATE_EXHAUSTED, STATE_ANXIOUS)")
     created_at: datetime
+    new_achievements: Optional[List[dict]] = Field(None, description="List of newly earned badges")
     
     model_config = ConfigDict(from_attributes=True)
 

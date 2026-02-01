@@ -84,16 +84,37 @@ async def create_mood_log(
         if not response.data:
             raise HTTPException(status_code=500, detail="Failed to create mood log")
         
-        # Update user profile with current avatar state (for fast dashboard loading)
+        created_log = response.data[0]
+        new_achievements = []
+        
+        # --- Update Profile & Check Badges ---
         try:
+            # 1. Update basic profile info (avatar state)
             supabase.table("profiles").update({
                 "avatar_state": avatar_state
             }).eq("user_id", current_user).execute()
-        except Exception as profile_error:
-            # Non-critical error, log but don't fail the request
-            print(f"Profile update error (non-critical): {profile_error}")
-        
-        return response.data[0]
+            
+            # 2. Fetch updated profile (trigger has run) to get new streak info
+            profile_response = supabase.table("profiles").select("*").eq("id", current_user).single().execute()
+            current_profile = profile_response.data
+            
+            if current_profile:
+                from app.services.badges import BadgeService
+                badge_service = BadgeService(supabase)
+                new_achievements = await badge_service.check_new_badges(
+                    user_id=current_user,
+                    new_log=created_log,
+                    current_profile=current_profile
+                )
+                
+        except Exception as flow_error:
+            # Non-critical, log and continue
+            print(f"Post-log flow error: {flow_error}")
+            
+        # Attach new achievements to response
+        created_log['new_achievements'] = new_achievements
+        return created_log
+
     except HTTPException:
         raise
     except Exception as e:

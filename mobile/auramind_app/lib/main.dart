@@ -3,6 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'config/supabase_config.dart';
 import 'widgets/auth_wrapper.dart';
+import 'services/notification_service.dart';
+
+// Global navigator key for notification navigation
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   // Ensure Flutter is initialized
@@ -14,6 +18,9 @@ void main() async {
   // Initialize Supabase before running the app
   await SupabaseConfig.initialize();
 
+  // Initialize notification service
+  await NotificationService().initialize();
+
   runApp(const AuramindApp());
 }
 
@@ -23,6 +30,7 @@ class AuramindApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Auramind',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(

@@ -46,4 +46,9 @@ root/
 - **Data Privacy**: All journal entries are processed with privacy-first standards using Row Level Security (RLS).
 
 ---
-*Status: Active Development (Features Implementing: Aura Calendar, AI Agents)*
+*Status: Active Development (Features Implementing: Aura Calendar, AI Agents, Streak & Badge System)*
+
+## 🏆 Streak & Badge System
+- **Gamification**: Visual streaks (flame icon) on Home screen to encourage daily logging.
+- **Achievements**: Unlockable badges (e.g., "Early Bird", "Balance Master") based on user behavior.
+- **Rules Engine**: Backend service tailored to reward positive mental health habits.

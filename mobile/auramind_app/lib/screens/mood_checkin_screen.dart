@@ -225,7 +225,7 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
       final apiService = ApiService(authToken: token);
 
       // Submit mood log
-      await apiService.createMoodLog(
+      final response = await apiService.createMoodLog(
         moodScore: _moodScore.toInt(),
         stressLevel: _stressLevel.toInt(),
         energyLevel: _energyLevel.toInt(),
@@ -236,12 +236,19 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Check-in saved successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        // Check for new achievements
+        final newAchievements = response['new_achievements'] as List<dynamic>?;
+
+        if (newAchievements != null && newAchievements.isNotEmpty) {
+          await _showAchievementDialog(newAchievements);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Check-in saved successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
 
         // Reset form
         setState(() {
@@ -266,6 +273,99 @@ class _MoodCheckinScreenState extends State<MoodCheckinScreen> {
       if (mounted) {
         setState(() => _isSubmitting = false);
       }
+    }
+  }
+
+  Future<void> _showAchievementDialog(List<dynamic> newBadges) async {
+    for (var badge in newBadges) {
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  '🎉 Chúc mừng! 🎉',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Badge Icon with Glow
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.orange.withOpacity(0.2),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: const Text(
+                    '🏆', // You could look up the emoji from badge code if available
+                    style: TextStyle(fontSize: 50),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  badge['name'] ?? 'Huy hiệu mới',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  badge['description'] ?? 'Bạn vừa mở khóa một thành tựu mới!',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Tuyệt vời!'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
   }
 

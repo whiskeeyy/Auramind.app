@@ -11,6 +11,7 @@ class MoodLogCreate(BaseModel):
     voice_transcript: Optional[str] = None
     primary_emotion: Optional[str] = Field(None, description="Primary emotion (vui, buồn, giận, lo lắng, bình yên, mệt mỏi)")
     summary: Optional[str] = Field(None, description="One-sentence summary of emotional state")
+    health_metrics: Optional[dict] = Field(None, description="Health metrics: {steps, sleep_hours, meditation_min, water_glasses, exercise_min}")
 
 class MoodLogResponse(MoodLogCreate):
     id: UUID4

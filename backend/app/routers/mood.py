@@ -130,18 +130,21 @@ async def get_calendar_data(
     supabase: Client = Depends(get_supabase_with_auth)
 ):
     """
-    Get aggregated mood data for calendar view.
+    Get aggregated mood and health data for holistic calendar view.
     
     Returns daily summaries with:
-    - Average mood score
-    - Primary avatar state (most common)
+    - Average mood score (for heatmap coloring)
+    - Primary avatar state (for icon display)
     - Top activities
+    - Health summary (steps, sleep, meditation, etc.)
     - Log count
     
-    Optionally includes AI-generated monthly insight (uses 1 API call).
+    Optionally includes AI-generated correlation insight (uses 1 API call).
+    Philosophy: "Calendar là nơi kể lại câu chuyện của người dùng"
     """
     from app.services.ai_manager import get_ai_manager
     from app.services.rate_limiter import get_rate_limiter
+    from app.models.calendar import HealthSummary
     
     # Build date range for the month
     start_date = f"{year}-{month:02d}-01T00:00:00"
@@ -151,9 +154,9 @@ async def get_calendar_data(
         end_date = f"{year}-{month + 1:02d}-01T00:00:00"
     
     try:
-        # Query mood logs for the month
+        # Query mood logs for the month (including health_metrics)
         response = supabase.table("mood_logs")\
-            .select("mood_score, avatar_state, activities, created_at")\
+            .select("mood_score, avatar_state, activities, health_metrics, created_at")\
             .eq("user_id", current_user)\
             .gte("created_at", start_date)\
             .lt("created_at", end_date)\
@@ -175,7 +178,8 @@ async def get_calendar_data(
         daily_data = defaultdict(lambda: {
             "mood_scores": [],
             "avatar_states": [],
-            "activities": []
+            "activities": [],
+            "health_metrics": []  # Collect all health metrics for aggregation
         })
         
         for log in logs:
@@ -191,6 +195,8 @@ async def get_calendar_data(
                 daily_data[date_str]["avatar_states"].append(log["avatar_state"])
             if log.get("activities"):
                 daily_data[date_str]["activities"].extend(log["activities"])
+            if log.get("health_metrics"):
+                daily_data[date_str]["health_metrics"].append(log["health_metrics"])
         
         # Build day summaries
         days = []
@@ -211,20 +217,54 @@ async def get_calendar_data(
             else:
                 top_activities = []
             
+            # Aggregate health metrics (if any exist)
+            health_summary = None
+            if data["health_metrics"]:
+                health_agg = {
+                    "steps": [],
+                    "sleep_hours": [],
+                    "meditation_min": [],
+                    "water_glasses": [],
+                    "exercise_min": []
+                }
+                for hm in data["health_metrics"]:
+                    if hm.get("steps") is not None:
+                        health_agg["steps"].append(hm["steps"])
+                    if hm.get("sleep_hours") is not None:
+                        health_agg["sleep_hours"].append(hm["sleep_hours"])
+                    if hm.get("meditation_min") is not None:
+                        health_agg["meditation_min"].append(hm["meditation_min"])
+                    if hm.get("water_glasses") is not None:
+                        health_agg["water_glasses"].append(hm["water_glasses"])
+                    if hm.get("exercise_min") is not None:
+                        health_agg["exercise_min"].append(hm["exercise_min"])
+                
+                # Only create summary if at least one metric exists
+                if any(health_agg.values()):
+                    health_summary = HealthSummary(
+                        total_steps=sum(health_agg["steps"]) if health_agg["steps"] else None,
+                        avg_sleep_hours=round(sum(health_agg["sleep_hours"]) / len(health_agg["sleep_hours"]), 1) if health_agg["sleep_hours"] else None,
+                        total_meditation_min=sum(health_agg["meditation_min"]) if health_agg["meditation_min"] else None,
+                        avg_water_glasses=round(sum(health_agg["water_glasses"]) / len(health_agg["water_glasses"]), 1) if health_agg["water_glasses"] else None,
+                        total_exercise_min=sum(health_agg["exercise_min"]) if health_agg["exercise_min"] else None
+                    )
+            
             days.append(DaySummary(
                 date=date_str,
                 average_mood_score=round(avg_mood, 1),
                 primary_avatar_state=primary_state,
                 top_activities=top_activities,
-                log_count=len(data["mood_scores"])
+                log_count=len(data["mood_scores"]),
+                health_summary=health_summary
             ))
             
-            # Prepare data for insight agent
+            # Prepare data for insight agent (include health for correlation)
             insight_data.append({
                 "date": date_str,
                 "avg_mood": avg_mood,
                 "avatar_state": primary_state,
-                "activities": top_activities
+                "activities": top_activities,
+                "health": health_summary.model_dump() if health_summary else None
             })
         
         # Generate monthly insight if requested (and rate limit allows)
@@ -233,7 +273,8 @@ async def get_calendar_data(
             rate_limiter = get_rate_limiter()
             if rate_limiter.is_allowed(current_user):
                 ai_manager = get_ai_manager()
-                monthly_insight = await ai_manager.get_monthly_insight(insight_data)
+                # Use correlation analysis for holistic insight
+                monthly_insight = await ai_manager.get_holistic_insight(insight_data)
         
         return MonthlyCalendarResponse(
             year=year,
@@ -246,3 +287,4 @@ async def get_calendar_data(
     except Exception as e:
         print(f"Calendar DB Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+

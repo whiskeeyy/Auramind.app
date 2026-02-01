@@ -329,6 +329,75 @@ Ví dụ output:
             print(f"Insight Agent Error: {e}")
             return "Bạn đang làm rất tốt với việc theo dõi cảm xúc hàng ngày! 💪"
 
+    async def analyze_monthly_correlation(self, month_data: list) -> str:
+        """
+        Holistic Insight Agent - Analyze correlation between mood, health metrics, and activities.
+        
+        Philosophy: "Calendar là nơi kể lại câu chuyện của người dùng"
+        Mood and health are cause-and-effect of each other.
+        
+        Args:
+            month_data: List of day summaries with:
+                - date, avg_mood, avatar_state, activities
+                - health: {total_steps, avg_sleep_hours, total_meditation_min, etc.}
+                
+        Returns:
+            Vietnamese insight string about causal relationships
+        """
+        if not month_data:
+            return "Chưa có đủ dữ liệu để phân tích mối tương quan tháng này."
+        
+        # Format data for prompt with holistic view
+        data_summary = ""
+        for day in month_data:
+            health = day.get('health') or {}
+            health_str = ""
+            if health.get('avg_sleep_hours') is not None:
+                health_str += f"ngủ {health['avg_sleep_hours']}h, "
+            if health.get('total_steps') is not None:
+                health_str += f"{health['total_steps']} bước, "
+            if health.get('total_meditation_min') is not None:
+                health_str += f"thiền {health['total_meditation_min']} phút, "
+            if health.get('total_exercise_min') is not None:
+                health_str += f"tập {health['total_exercise_min']} phút, "
+            
+            health_str = health_str.rstrip(', ') if health_str else "không có dữ liệu sức khỏe"
+            activities_str = ', '.join(day['activities']) if day['activities'] else 'không có hoạt động'
+            
+            data_summary += f"- {day['date']}: Mood={day['avg_mood']:.1f}, Health=[{health_str}], Activities=[{activities_str}]\n"
+        
+        prompt = f"""Role: Bạn là Holistic Insight Analyst của AuraMind - chuyên phân tích mối tương quan nhân quả giữa Sức khỏe, Hoạt động và Tâm trạng.
+
+Philosophy: "Sức khỏe và Tâm trạng là nguyên nhân và kết quả của nhau."
+
+Task: Phân tích dữ liệu tổng hợp dưới đây và tìm ra MỘT mối tương quan nhân quả nổi bật nhất.
+
+Data:
+{data_summary}
+
+Constraints:
+- Chỉ trả về 1-2 câu (tối đa 40 từ)
+- Viết tiếng Việt tự nhiên, thân thiện (xưng "mình", gọi "bạn")
+- TẬP TRUNG vào mối liên hệ NHÂN QUẢ:
+  + Giấc ngủ ảnh hưởng mood thế nào?
+  + Vận động giúp cải thiện tâm trạng ra sao?
+  + Thiền định có tác động gì?
+- Nếu có dữ liệu sức khỏe, ưu tiên phân tích nó
+- Nếu không tìm thấy pattern rõ ràng, đưa ra gợi ý tích cực
+
+Ví dụ output:
+- "Dữ liệu cho thấy giấc ngủ dưới 5 tiếng thường kéo mood của bạn xuống thấp, trong khi vận động giúp bạn hồi phục nhanh chóng."
+- "Mình thấy những ngày bạn tập gym và ngủ đủ giấc, mood của bạn luôn ở mức cao nhất!"
+- "Thiền định 15 phút mỗi ngày dường như giúp bạn giảm stress đáng kể." 
+"""
+        
+        try:
+            response = self.model.generate_content(prompt)
+            return response.text.strip()
+        except Exception as e:
+            print(f"Holistic Insight Agent Error: {e}")
+            return "Bạn đang làm rất tốt với việc theo dõi cả cảm xúc lẫn sức khỏe! 💪"
+
 
 class AIAgentManager:
     """
@@ -350,6 +419,18 @@ class AIAgentManager:
     async def get_monthly_insight(self, days_data: list) -> str:
         """Delegates to InsightAgent for monthly pattern analysis"""
         return await self.insight_agent.analyze_month(days_data)
+
+    async def get_holistic_insight(self, month_data: list) -> str:
+        """
+        Delegates to InsightAgent for holistic mood/health/activity correlation analysis
+        
+        Args:
+            month_data: List of day summaries with mood, health, and activities
+            
+        Returns:
+            Vietnamese insight about causal relationships
+        """
+        return await self.insight_agent.analyze_monthly_correlation(month_data)
 
     async def chat(self, message: str, history: list[dict]) -> dict:
         """Delegates to ChatAgent"""

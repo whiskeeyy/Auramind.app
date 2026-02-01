@@ -424,6 +424,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final avatarState =
         data['primary_avatar_state'] as String? ?? 'STATE_NEUTRAL';
 
+    // Extract health summary (nullable)
+    final healthSummary = data['health_summary'] as Map<String, dynamic>?;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -468,19 +471,123 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Mood Score
-                Row(
-                  children: [
-                    const Icon(Icons.favorite, color: Colors.pink),
-                    const SizedBox(width: 8),
-                    Text('Mood trung bình: '),
-                    Text(
-                      '${moodScore.toStringAsFixed(1)}/10',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                // === HOLISTIC SECTION: Mood & Health side by side ===
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer
+                        .withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.2),
                     ),
-                  ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Section title
+                      Row(
+                        children: [
+                          Icon(Icons.insights,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Tổng quan ngày',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Mood Score with slider visualization
+                      Row(
+                        children: [
+                          const Icon(Icons.favorite,
+                              color: Colors.pink, size: 20),
+                          const SizedBox(width: 8),
+                          const Text('Mood: '),
+                          Text(
+                            '${moodScore.toStringAsFixed(1)}/10',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: moodScore / 10,
+                                backgroundColor: Colors.grey[300],
+                                color: _getMoodColor(moodScore),
+                                minHeight: 8,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // Health Metrics (only show if data exists)
+                      if (healthSummary != null) ...[
+                        const SizedBox(height: 12),
+                        const Divider(height: 1),
+                        const SizedBox(height: 12),
+
+                        // Sleep
+                        if (healthSummary['avg_sleep_hours'] != null)
+                          _buildHealthMetricRow(
+                            Icons.bedtime,
+                            Colors.indigo,
+                            'Giấc ngủ',
+                            '${healthSummary['avg_sleep_hours']}h',
+                          ),
+
+                        // Steps
+                        if (healthSummary['total_steps'] != null)
+                          _buildHealthMetricRow(
+                            Icons.directions_walk,
+                            Colors.teal,
+                            'Bước chân',
+                            '${healthSummary['total_steps']}',
+                          ),
+
+                        // Exercise
+                        if (healthSummary['total_exercise_min'] != null)
+                          _buildHealthMetricRow(
+                            Icons.fitness_center,
+                            Colors.orange,
+                            'Tập luyện',
+                            '${healthSummary['total_exercise_min']} phút',
+                          ),
+
+                        // Meditation
+                        if (healthSummary['total_meditation_min'] != null)
+                          _buildHealthMetricRow(
+                            Icons.self_improvement,
+                            Colors.purple,
+                            'Thiền định',
+                            '${healthSummary['total_meditation_min']} phút',
+                          ),
+
+                        // Water
+                        if (healthSummary['avg_water_glasses'] != null)
+                          _buildHealthMetricRow(
+                            Icons.water_drop,
+                            Colors.blue,
+                            'Nước uống',
+                            '${healthSummary['avg_water_glasses']} ly',
+                          ),
+                      ],
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
 
                 // Activities
                 if (activities.isNotEmpty) ...[
@@ -513,5 +620,32 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ),
       ),
     );
+  }
+
+  /// Build a row for displaying a health metric
+  Widget _buildHealthMetricRow(
+      IconData icon, Color color, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Text('$label: '),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Get color based on mood score
+  Color _getMoodColor(double score) {
+    if (score >= 7) return Colors.green;
+    if (score >= 5) return Colors.blue;
+    if (score >= 3) return Colors.orange;
+    return Colors.purple;
   }
 }

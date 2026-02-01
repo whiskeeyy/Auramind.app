@@ -591,11 +591,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
                 // Activities
                 if (activities.isNotEmpty) ...[
-                  Row(
+                  const Row(
                     children: [
-                      const Icon(Icons.local_activity, color: Colors.orange),
-                      const SizedBox(width: 8),
-                      const Text('Hoạt động:'),
+                      Icon(Icons.local_activity, color: Colors.orange),
+                      SizedBox(width: 8),
+                      Text('Hoạt động:'),
                     ],
                   ),
                   const SizedBox(height: 8),

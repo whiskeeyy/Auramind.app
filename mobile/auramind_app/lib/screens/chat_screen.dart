@@ -17,7 +17,7 @@ class _ChatScreenState extends State<ChatScreen> {
   ApiService? _apiService;
 
   bool _isLoading = false;
-  String _currentAvatarState = "STATE_NEUTRAL";
+  String _currentAvatarState = 'STATE_NEUTRAL';
 
   @override
   void initState() {
@@ -25,7 +25,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _initApiService();
     // Welcome message
     _messages.add(ChatMessage(
-      text: "Xin chào! Mình là Aura. Bạn đang cảm thấy thế nào?",
+      text: 'Xin chào! Mình là Aura. Bạn đang cảm thấy thế nào?',
       isUser: false,
       timestamp: DateTime.now(),
     ));
@@ -81,7 +81,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        "Aura is typing...",
+                        'Aura is typing...',
                         style: TextStyle(
                             fontStyle: FontStyle.italic, color: Colors.grey),
                       ),
@@ -233,7 +233,7 @@ class _ChatScreenState extends State<ChatScreen> {
             isUser: false,
             timestamp: DateTime.now(),
           ));
-          _currentAvatarState = response['avatar_state'] ?? "STATE_NEUTRAL";
+          _currentAvatarState = response['avatar_state'] ?? 'STATE_NEUTRAL';
           _isLoading = false;
         });
         _scrollToBottom();

@@ -9,7 +9,6 @@ Auramind is a "Digital Companion" that helps users transform invisible emotions 
 
 ## 🛠 Tech Stack (2026 Edition)
 - **Mobile App**: **Flutter** (Provider State Management) for high-performance cross-platform experience.
-- **AI Orchestration**: **Antigravity Manager** (powered by Gemini) with specialized agents (Empathy, Insight, Analyzer).
 - **Backend**: **FastAPI** for high-speed Python-based AI services.
 - **Data & Auth**: **Supabase** (PostgreSQL) for realtime sync, secure RLS, and authentication.
 - **Face Tracking**: **MediaPipe** for AI-driven avatar mapping.

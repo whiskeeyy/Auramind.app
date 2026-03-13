@@ -42,7 +42,7 @@ Tập trung vào vòng lặp: Check-in → Phân tích (AI) → Phản hồi (Av
 #### AI Companion (Antigravity)
 - **Analyzer Agent**: Phân tích sentiment và trích xuất chỉ số stress
 - **Empathy Agent**: Phản hồi theo phương pháp "Reflective Listening"
-- **Status**: ⚠️ Stub ready, needs Gemini integration
+- **Status**: ✅ Implemented
 
 #### Visual Dashboard
 - Biểu đồ xu hướng (Line)
@@ -52,7 +52,7 @@ Tập trung vào vòng lặp: Check-in → Phân tích (AI) → Phản hồi (Av
 
 #### Basic Mood Avatar
 - Nhân vật 2D thay đổi biểu cảm (vui, buồn, mệt mỏi) theo mood score
-- **Status**: 🔜 Planned
+- **Status**: ✅ Implemented
 
 ### P2: Post-MVP (Nâng cao)
 
@@ -120,8 +120,8 @@ CREATE TABLE mood_logs (
 |------|----------|--------|
 | 0 | Setup hạ tầng (Supabase + Antigravity Agents setup) | ✅ |
 | 1 | Xây dựng luồng Check-in và giao diện Flutter cơ bản | ✅ |
-| 2-3 | Tích hợp AI Agent phân tích và phản hồi text | 🔄 |
-| 4 | Phát triển hệ thống Avatar (Basic và Mood-based) | 🔜 |
+| 2-3 | Tích hợp AI Agent phân tích và phản hồi text | ✅ |
+| 4 | Phát triển hệ thống Avatar (Basic và Mood-based) | ✅ |
 | 5 | Hoàn thiện Dashboard trực quan hóa dữ liệu | ✅ |
 | 6 | Testing, tinh chỉnh Prompt an toàn | 🔜 |
 | 7 | Submit Store | 🔜 |

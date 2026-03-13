@@ -8,7 +8,8 @@ plugins {
 android {
     namespace = "com.example.auramind_app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Use a specific working NDK version because the automatically selected version (28.x) is corrupted on this machine.
+    ndkVersion = "29.0.14206865"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

@@ -100,7 +100,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
 
         // Format date simply
         final date = DateTime.parse(record['earned_at']).toLocal();
-        earnedDates[code] = "${date.day}/${date.month}/${date.year}";
+        earnedDates[code] = '${date.day}/${date.month}/${date.year}';
       }
 
       if (mounted) {

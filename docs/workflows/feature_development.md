@@ -42,6 +42,6 @@ Mọi thứ bắt đầu từ Data.
 - Sửa lỗi (nếu có).
 
 ## 5. Commit & Push
-- Gom các thay đổi thành các Commit nhỏ (Atomic Commits).
+- Gom các thay đổi thành các Commit nhỏ (Atomic Commits, ENG).
 - Cập nhật `TASKS.md` đánh dấu `[x]` vào các đầu mục nhỏ đã xong.
 - Đẩy nhánh lên Git và tạo Pull Request.

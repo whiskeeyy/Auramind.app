@@ -1,4 +1,5 @@
 import os
+import base64
 from typing import Optional
 from fastapi import HTTPException, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -14,14 +15,22 @@ security = HTTPBearer()
 security_optional = HTTPBearer(auto_error=False)
 
 # Get JWT secret from environment
-SUPABASE_JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET")
+# Supabase JWT Secret can be stored as raw string or base64-encoded
+_SUPABASE_JWT_SECRET_RAW = os.environ.get("SUPABASE_JWT_SECRET")
 
-if not SUPABASE_JWT_SECRET:
+if not _SUPABASE_JWT_SECRET_RAW:
     raise ValueError(
         "SUPABASE_JWT_SECRET environment variable is not set. "
         "Please add it to your .env file. You can find it in your Supabase project settings "
         "under Settings > API > JWT Secret."
     )
+
+# Try to base64-decode the secret (Supabase stores it base64-encoded).
+# Fall back to using it as-is if decoding fails.
+try:
+    SUPABASE_JWT_SECRET: bytes = base64.b64decode(_SUPABASE_JWT_SECRET_RAW)
+except Exception:
+    SUPABASE_JWT_SECRET = _SUPABASE_JWT_SECRET_RAW.encode()
 
 
 def verify_jwt_token(token: str) -> dict:
@@ -39,25 +48,28 @@ def verify_jwt_token(token: str) -> dict:
     """
     try:
         # Decode and verify the JWT token
-        # Supabase uses HS256 algorithm by default
+        # Supabase JWT is HS256, secret is base64-decoded bytes
         payload = jwt.decode(
             token,
             SUPABASE_JWT_SECRET,
             algorithms=["HS256"],
-            audience="authenticated"  # Supabase default audience
+            options={"verify_aud": False}  # audience field varies by Supabase config
         )
         return payload
-    except jwt.ExpiredSignatureError:
+    except jwt.ExpiredSignatureError as e:
+        print(f"JWT Expired: {e}")
         raise HTTPException(
             status_code=401,
             detail="Token has expired. Please login again."
         )
     except jwt.InvalidTokenError as e:
+        print(f"JWT Invalid: {e}")
         raise HTTPException(
             status_code=401,
             detail=f"Invalid authentication token: {str(e)}"
         )
     except Exception as e:
+        print(f"JWT General Error: {e}")
         raise HTTPException(
             status_code=401,
             detail=f"Authentication failed: {str(e)}"

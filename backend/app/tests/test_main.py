@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 from app.main import app
-from app.core import get_supabase
+from app.core import get_supabase, get_supabase_with_auth
 from app.auth import get_current_user
 from unittest.mock import MagicMock
 import pytest
@@ -22,6 +22,7 @@ async def override_get_current_user():
     return MOCK_USER_ID
 
 app.dependency_overrides[get_supabase] = override_get_supabase
+app.dependency_overrides[get_supabase_with_auth] = override_get_supabase
 app.dependency_overrides[get_current_user] = override_get_current_user
 
 def test_read_main():

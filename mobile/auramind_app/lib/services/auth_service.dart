@@ -95,15 +95,11 @@ class AuthService {
 
   /// Handle Supabase auth exceptions with user-friendly messages
   Exception _handleAuthException(AuthException e) {
-    switch (e.statusCode) {
-      case '400':
-        return Exception('Invalid email or password');
-      case '422':
-        return Exception('Email already registered');
-      case '500':
-        return Exception('Server error. Please try again later');
-      default:
-        return Exception(e.message);
+    // Supabase provides descriptive error messages in e.message
+    // like "Invalid login credentials", "User already registered", etc.
+    if (e.statusCode == '500') {
+      return Exception('Server error. Please try again later');
     }
+    return Exception(e.message);
   }
 }

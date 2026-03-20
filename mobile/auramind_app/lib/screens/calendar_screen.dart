@@ -357,8 +357,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       cellColor = Colors.purple[100]!;
     }
 
-    // Avatar state emoji
-    String emoji = _getAvatarEmoji(avatarState);
+    // Avatar state icon
+    IconData icon = _getAvatarIcon(avatarState);
 
     return GestureDetector(
       onTap: hasData ? () => _showDayDetail(day, data) : null,
@@ -388,11 +388,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 ),
               ),
             ),
-            // Avatar emoji (if has data)
+            // Avatar icon (if has data)
             if (hasData)
               Positioned(
                 bottom: 4,
-                child: Text(emoji, style: const TextStyle(fontSize: 16)),
+                child: Icon(icon, size: 16, color: Colors.blueGrey),
               ),
           ],
         ),
@@ -400,20 +400,20 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  String _getAvatarEmoji(String state) {
+  IconData _getAvatarIcon(String state) {
     switch (state) {
       case 'STATE_JOYFUL':
-        return '😊';
+        return Icons.sentiment_very_satisfied;
       case 'STATE_SAD':
-        return '😔';
+        return Icons.sentiment_dissatisfied;
       case 'STATE_ANXIOUS':
-        return '😟';
+        return Icons.sentiment_neutral;
       case 'STATE_EXHAUSTED':
-        return '😫';
+        return Icons.sentiment_very_dissatisfied;
       case 'STATE_OVERWHELMED':
-        return '😵';
+        return Icons.sick;
       default:
-        return '😐';
+        return Icons.sentiment_satisfied;
     }
   }
 
@@ -449,9 +449,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 // Header
                 Row(
                   children: [
-                    Text(
-                      _getAvatarEmoji(avatarState),
-                      style: const TextStyle(fontSize: 40),
+                    Icon(
+                      _getAvatarIcon(avatarState),
+                      size: 40,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(width: 16),
                     Column(
